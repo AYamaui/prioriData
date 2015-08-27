@@ -8,5 +8,13 @@ PrioriData::Application.routes.draw do
                        value: 'application/vnd.api.prioridata.com+json; version=1'},
               defaults: {format: :json},
               default: true) do
+
+    resources :categories, only: [] do
+
+      resources :apps, only: [:index, :show]
+
+      resources :publishers, only: [:index]
+
+    end
   end
 end

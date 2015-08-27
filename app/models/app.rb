@@ -1,22 +1,9 @@
-class TopApp
+class App
 
   include HTTParty
 
-  # Fetches and returns the top rated apps with its meta data
-  #
-  # @param category_id [String] The id of the apps category
-  # @param monetization [String] The monetization type of the apps to fetch 
-  #         (Paid, Free, Grossing)
-  # @param rank_position [Integer | nil] The rank position of the app to fetch,
-  #         if a single app is requested; nil, otherwise
-  # @return meta_data [Hash<String x Hash<String>>] The information extracted
-  #         from the Apple Lookup API
-  def get_top_apps(category_id, 
-                  monetization, 
-                  rank_position = 3)
-    meta_data = {}
-
-    # Fetches the top rated apps inside the category
+  # Fetches the top rated apps inside the category
+  def self.fetch_top_rated_apps(category_id, monetization)
     response = HTTParty.get(
                 "https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewTop", 
                 query: {genreId: "#{category_id}", 
@@ -35,41 +22,37 @@ class TopApp
                           "Cache-Control" => "max-age=0", 
                           "X-Apple-Store-Front" => "143441-1,17"})
 
-    return response.response unless response.success?
+    return [] unless response.success? && response["topCharts"]
 
     response = JSON.parse(response.body)
 
     case monetization
-    when 'Paid'
-      app_ids = response["topCharts"][0]["adamIds"]
-    when 'Free'
-      app_ids = response["topCharts"][1]["adamIds"]
-    when 'Grossing'
-      app_ids = response["topCharts"][2]["adamIds"]
+      when 'Paid'
+        app_ids = response["topCharts"][0]["adamIds"]
+      when 'Free'
+        app_ids = response["topCharts"][1]["adamIds"]
+      when 'Grossing'
+        app_ids = response["topCharts"][2]["adamIds"]
     end
-
-    unless rank_position
-      fetch_meta_data_for_multiple_apps(app_ids, meta_data)
-    else
-      fetch_meta_data_for_single_app(app_ids[rank_position - 1], meta_data)
-    end
-      
-
   end
 
-  private
+  # Fetches and returns the top rated apps with its meta data
+  #
+  # @param category_id [String] The id of the apps category
+  # @param monetization [String] The monetization type of the apps to fetch 
+  #         (Paid, Free, Grossing)
+  # @param rank_position [Integer | nil] The rank position of the app to fetch,
+  #         if a single app is requested; nil, otherwise
+  # @return meta_data [Hash<String x Hash<String x String>>] The information 
+  #         extracted from the Apple Lookup API
+  def self.get_top_apps(category_id = "6001", 
+                        monetization = "Free", 
+                        rank_position = nil)
+    meta_data = {}
 
-    # Extracts the meta data required for a single app and stores it in the
-    # meta_data hash
-    #
-    # @param app_info [Hash<String x String>] App information from the look
-    #         up API
-    # @param meta_data [Hash<String x Hash<String>>] The hash where the
-    #         information is stored
-    # @return meta_data [Hash<String x Hash<String>>] The meta_data hash
-    #         updated with the app info
-    def extract_meta_data(app_info, meta_data)
+    app_ids = fetch_top_rated_apps(category_id,  monetization)
 
+    extract_meta_data = Proc.new do |app_info, meta_data|
       meta_data[app_info["trackId"]] = {
         app_name: app_info["trackName"],
         description: app_info["description"],
@@ -79,8 +62,21 @@ class TopApp
         version_number: app_info["version"],
         average_user_rating: app_info["averageUserRatingForCurrentVersion"]
       }
-
     end
+
+    if rank_position
+      fetch_meta_data_for_single_app(app_ids[rank_position - 1], 
+                                      meta_data,
+                                      extract_meta_data)
+    else
+      
+      fetch_meta_data_for_multiple_apps(app_ids, 
+                                        meta_data, 
+                                        extract_meta_data)
+    end
+  end
+
+  private
 
     # Fetches the meta data for multiple apps
     #
@@ -89,7 +85,7 @@ class TopApp
     #         information is stored
     # @return meta_data [Hash<String x Hash<String>>] The meta_data hash
     #         updated with the apps info
-    def fetch_meta_data_for_multiple_apps(app_ids, meta_data)
+    def self.fetch_meta_data_for_multiple_apps(app_ids, meta_data, proc)
 
       # Makes a request call to the search api for every 10 app ids
       app_ids.in_groups_of(10) do |group|
@@ -101,7 +97,7 @@ class TopApp
         # Extracts the meta data for every app
         response["results"].each do |app_info|
 
-          extract_meta_data(app_info, meta_data)
+          proc.call(app_info, meta_data).to_json
         end
       end
 
@@ -115,13 +111,13 @@ class TopApp
     #         information is stored
     # @return meta_data [Hash<String x Hash<String>>] The meta_data hash
     #         updated with the app info
-    def fetch_meta_data_for_single_app(app_id, meta_data)
+    def self.fetch_meta_data_for_single_app(app_id, meta_data, proc)
 
       response = HTTParty.get("https://itunes.apple.com/lookup", 
                               query: {id: app_id})
       response = JSON.parse(response.body)
 
-      extract_meta_data(response["results"].first, meta_data)
+      proc.call(response["results"].first, meta_data).to_json
     end
 
 end
