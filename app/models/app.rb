@@ -2,6 +2,8 @@ class App
 
   include HTTParty
 
+  MONETIZATIONS = ['Free', 'Paid', 'Grossing']
+
   # Fetches the top rated apps inside the category
   def self.fetch_top_rated_apps(category_id, monetization)
     response = HTTParty.get(
@@ -45,9 +47,7 @@ class App
   #         if a single app is requested; nil, otherwise
   # @return meta_data [Hash<String x Hash<String x String>>] The information 
   #         extracted from the Apple Lookup API
-  def self.get_top_apps(category_id = "6001", 
-                        monetization = "Free", 
-                        rank_position = nil)
+  def self.get_top_apps(category_id, monetization, rank_position=nil)
     meta_data = {}
 
     app_ids = fetch_top_rated_apps(category_id,  monetization)
@@ -65,7 +65,7 @@ class App
     end
 
     if rank_position
-      fetch_meta_data_for_single_app(app_ids[rank_position - 1], 
+      fetch_meta_data_for_single_app(app_ids[rank_position.to_i - 1], 
                                       meta_data,
                                       extract_meta_data)
     else

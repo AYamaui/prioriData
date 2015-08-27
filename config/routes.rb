@@ -11,10 +11,12 @@ PrioriData::Application.routes.draw do
 
     resources :categories, only: [] do
 
-      resources :apps, only: [:index, :show]
+      resources :apps, only: [:index]
 
       resources :publishers, only: [:index]
 
     end
+
+    get "*path", to: "errors#invalid_url"
   end
 end

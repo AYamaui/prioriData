@@ -15,7 +15,7 @@ class Publisher
     publishers = {}
     i = 1
 
-    app_ids = TopApp.fetch_top_rated_apps(category_id, monetization)
+    app_ids = App.fetch_top_rated_apps(category_id, monetization)
 
     extract_meta_data = Proc.new do |app_info, meta_data|
 
@@ -31,7 +31,7 @@ class Publisher
       end
     end
     
-    TopApp.fetch_meta_data_for_multiple_apps(app_ids, 
+    App.fetch_meta_data_for_multiple_apps(app_ids, 
                                               meta_data, 
                                               extract_meta_data)
 
