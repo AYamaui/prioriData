@@ -9,7 +9,7 @@ class V1::PublishersController < V1::BaseController
       render json: @top_publishers
 
     rescue
-      @errors = "Something went wrong!"
+      @errors = "Something went wrong! Please try later"
       render template: 'v1/errors/errors.json.jbuilder'
     end
   end

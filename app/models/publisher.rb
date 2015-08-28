@@ -32,8 +32,8 @@ class Publisher
     end
     
     App.fetch_meta_data_for_multiple_apps(app_ids, 
-                                              meta_data, 
-                                              extract_meta_data)
+                                          meta_data, 
+                                          extract_meta_data)
 
     publishers = meta_data.sort_by{|k,v| v[:number_of_apps]}.reverse.to_h
 

@@ -5,6 +5,11 @@ class App
   MONETIZATIONS = ['Free', 'Paid', 'Grossing']
 
   # Fetches the top rated apps inside the category
+  #
+  # @param category_id [String] The id of the apps category
+  # @param monetization [String] The monetization type of the apps to fetch 
+  #         (Paid, Free, Grossing)
+  # @return app_ids [Array<String>] The top rated apps ids
   def self.fetch_top_rated_apps(category_id, monetization)
     response = HTTParty.get(
                 "https://itunes.apple.com/WebObjects/MZStore.woa/wa/viewTop", 
