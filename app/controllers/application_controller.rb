@@ -17,9 +17,9 @@ class ApplicationController < ActionController::Base
       @errors = "Bad monetization value. Options: [Free|Paid|Grossing]."
     elsif !(@category_id.to_i.to_s == @category_id)
       @errors = "Category Id should be numeric"
-    elsif (@rank_position.present? && 
-          !(@rank_position.to_i.to_s == @rank_position)) || 
-          @rank_position.empty?
+    elsif @rank_position.present? && (
+          !(@rank_position.to_i.to_s == @rank_position) || 
+          @rank_position.empty?)
       @errors = "Rank position should be numeric"
     end
 

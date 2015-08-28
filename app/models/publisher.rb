@@ -10,7 +10,7 @@ class Publisher
   #         (Paid, Free, Grossing)
   # @return publishers [Hash<Integer x Hash<String x String>>] The information 
   #         extracted from the Apple Lookup API
-  def self.get_top_publishers(category_id = "6001", monetization = "Free")
+  def self.get_top_publishers(category_id, monetization)
     meta_data = {}
     publishers = {}
     i = 1
